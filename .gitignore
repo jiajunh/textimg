@@ -1,0 +1,42 @@
+# Python bytecode and build outputs
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+
+# Local environments and package caches
+.venv/
+.venv-*/
+venv/
+env/
+.uv-cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local credentials; keep the documented template
+.env
+.env.*
+!.env.example
+.aws/
+
+# Generated experiment outputs and downloaded model caches
+/artifacts/
+/data/
+/generations/
+/results/
+/checkpoints/
+/models/
+.cache/
+*.log
+
+# Notebook and operating-system temporary files
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+
+# Keep pyproject.toml, uv.lock, .python-version, and environments/backups/ in Git.
