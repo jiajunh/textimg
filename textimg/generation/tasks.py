@@ -1,6 +1,6 @@
 """Dataset grouping and input formatting, shared by image workflows."""
 from pathlib import Path
-from textimg.datasets.load import load_data
+from textimg.data_loading.load import load_data
 from textimg.core.io import limit_rows
 from . import prompts
 

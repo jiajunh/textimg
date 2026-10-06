@@ -1,6 +1,3 @@
-"""Local Qwen-Image-2.1; requires a Diffusers build with QwenImage21Pipeline."""
-
-
 def load_qwen_image_21(args):
     import torch
     from diffusers import QwenImage21Pipeline

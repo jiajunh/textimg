@@ -1,5 +1,3 @@
-"""Legacy adapter; imported only when selected."""
-
 import os
 from diffusers import BitsAndBytesConfig, SD3Transformer2DModel
 from diffusers import StableDiffusion3Pipeline

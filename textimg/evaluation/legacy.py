@@ -1,8 +1,8 @@
 import os
 import json
 from tqdm import tqdm
-from textimg.datasets.load import load_data
-from textimg.core.io import image_files
+from textimg.data_loading.load import load_data
+from textimg.core.io import image_files, completed_ids, open_results
 from textimg.core.text import *
 from textimg.judging.reasoning import gpt_extract_text, math_process_score, context_reasoning_score, multiple_choice_reasoning_score
 
@@ -11,12 +11,15 @@ def evaluate_identical(args):
     output_path = os.path.join(args.output_dir, f'{args.model}.jsonl')
     print(output_path)
     id_to_idx = {id_: i for i, id_ in enumerate(ds['id'])}
-    with open(output_path, 'w', encoding='utf-8') as f:
+    done = completed_ids(output_path, args)
+    with open_results(output_path, args) as f:
         for k in args.text_length:
             img_dir = os.path.join(args.img_dir, str(k))
             img_files = image_files(img_dir, args)
             for img_file in tqdm(img_files, desc=f'text_length={k}'):
                 img_id = int(img_file.split('.')[0])
+                if img_id in done:
+                    continue
                 data_row = ds[id_to_idx[img_id]]
                 original_text = data_row['text']
                 cur_img_path = os.path.join(img_dir, img_file)
@@ -37,12 +40,15 @@ def evaluate_multilingual(args):
         id_to_idx = {id_: i for i, id_ in enumerate(data['id'])}
         output_path = os.path.join(args.output_dir, f'{args.model}_{lang}.jsonl')
         print(output_path)
-        with open(output_path, 'w', encoding='utf-8') as f:
+        done = completed_ids(output_path, args)
+        with open_results(output_path, args) as f:
             for k in args.text_length:
                 img_dir = os.path.join(args.img_dir, lang, str(k))
                 img_files = image_files(img_dir, args)
                 for img_file in tqdm(img_files, desc=f'language={lang}, text_length={k}'):
                     img_id = int(img_file.split('.')[0])
+                    if img_id in done:
+                        continue
                     data_row = data[id_to_idx[img_id]]
                     original_text = data_row['text']
                     cur_img_path = os.path.join(img_dir, img_file)
@@ -61,11 +67,14 @@ def evaluate_reasoning(args):
     id_to_idx = {id_: i for i, id_ in enumerate(ds['id'])}
     output_path = os.path.join(args.output_dir, f'{args.model}.jsonl')
     print(output_path)
-    with open(output_path, 'w', encoding='utf-8') as f:
+    done = completed_ids(output_path, args)
+    with open_results(output_path, args) as f:
         img_dir = args.img_dir
         img_files = image_files(img_dir, args)
         for img_file in tqdm(img_files, desc=f'reasoning'):
             img_id = int(img_file.split('.')[0])
+            if img_id in done:
+                continue
             data_row = ds[id_to_idx[img_id]]
             problem = data_row['problem']
             solution_text = data_row['solution']
@@ -82,11 +91,14 @@ def evaluate_context_reasoning(args):
     id_to_idx = {id_: i for i, id_ in enumerate(ds['id'])}
     output_path = os.path.join(args.output_dir, f'{args.model}.jsonl')
     print(output_path)
-    with open(output_path, 'w', encoding='utf-8') as f:
+    done = completed_ids(output_path, args)
+    with open_results(output_path, args) as f:
         img_dir = args.img_dir
         img_files = image_files(img_dir, args)
         for img_file in tqdm(img_files, desc=f'context_reasoning'):
             img_id = int(img_file.split('.')[0])
+            if img_id in done:
+                continue
             data_row = ds[id_to_idx[img_id]]
             passage = data_row['passage']
             question = data_row['question']
@@ -105,11 +117,14 @@ def evaluate_multiple_choice(args):
         id_to_idx = {id_: i for i, id_ in enumerate(ds['id'])}
         output_path = os.path.join(args.output_dir, f'{args.model}_{split}.jsonl')
         print(output_path)
-        with open(output_path, 'w', encoding='utf-8') as f:
+        done = completed_ids(output_path, args)
+        with open_results(output_path, args) as f:
             img_dir = os.path.join(args.img_dir, split)
             img_files = image_files(img_dir, args)
             for img_file in tqdm(img_files, desc=f'multiple_choice'):
                 img_id = int(img_file.split('.')[0])
+                if img_id in done:
+                    continue
                 data_row = ds[id_to_idx[img_id]]
                 choices = data_row['choices']
                 question = data_row['question']

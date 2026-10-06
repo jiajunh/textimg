@@ -9,6 +9,9 @@ from uuid import uuid4
 
 
 def start(args):
+    if not args.manifest_dir:
+        args.records_path = None
+        return None, {}
     serializable = {key: value for key, value in vars(args).items()
                     if value is None or isinstance(value, (str, int, float, bool, list))}
     packages = {}
@@ -40,6 +43,8 @@ def start(args):
 
 
 def finish(path, record, *, status, summary=None, error=None):
+    if path is None:
+        return
     record.update(status=status, finished_at=datetime.now(timezone.utc).isoformat())
     if summary is not None:
         record["summary"] = summary

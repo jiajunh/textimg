@@ -1,9 +1,6 @@
-"""Provider routing for unchanged extraction and scoring prompts.
-
-Gemini is opt-in and credentials are only read when its adapter is selected.
-"""
 import base64
 import os
+import time
 from types import SimpleNamespace
 
 
@@ -53,12 +50,26 @@ class CountedResponses:
         self.responses = self
 
     def create(self, **kwargs):
+        # GPT-4 and GPT-3.5 judges do not support reasoning effort.
+        model = kwargs.get("model", "")
+        if self.args.judge_provider == "openai" and model.startswith(
+            ("gpt-4", "chatgpt-4o", "gpt-3.5")
+        ):
+            kwargs.pop("reasoning", None)
         count = getattr(self.args, "judge_calls", 0)
         cap = getattr(self.args, "max_judge_calls", None)
         if cap is not None and count >= cap:
             raise RuntimeError(f"Reached --max-judge-calls={cap}; run stopped before the next call.")
+        last_finished = getattr(self.args, "_judge_last_finished", None)
+        if last_finished is not None:
+            remaining = getattr(self.args, "judge_call_delay", 1.0) - (time.monotonic() - last_finished)
+            if remaining > 0:
+                time.sleep(remaining)
         self.args.judge_calls = count + 1
-        return self.client.responses.create(**kwargs)
+        try:
+            return self.client.responses.create(**kwargs)
+        finally:
+            self.args._judge_last_finished = time.monotonic()
 
 
 def judge_client(args):

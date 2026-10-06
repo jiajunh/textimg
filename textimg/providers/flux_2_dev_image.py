@@ -1,5 +1,3 @@
-"""Legacy adapter; imported only when selected."""
-
 import time
 import os
 import requests

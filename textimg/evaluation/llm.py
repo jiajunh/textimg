@@ -1,7 +1,7 @@
 import os
 import json
 from tqdm import tqdm
-from textimg.datasets.load import load_data
+from textimg.data_loading.load import load_data
 from textimg.core.text import *
 from textimg.judging.reasoning import math_process_score, context_reasoning_score, multiple_choice_reasoning_score
 

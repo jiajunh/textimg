@@ -4,7 +4,7 @@ from importlib import import_module
 import json
 from pathlib import Path
 
-from .datasets.load import TASKS
+from .data_loading.load import TASKS
 from .generation.registry import MODELS, EXACT_TEXT_ONLY, LOCAL_MODELS
 
 BASE = Path(__file__).resolve().parents[1]
@@ -14,7 +14,7 @@ def add_common_args(subparser):
     subparser.add_argument("--dataset-type", "--dataset_type", choices=TASKS, default="identical")
     subparser.add_argument("--dataset", default="jiajunh/img_text")
     subparser.add_argument("--local-data", help="Directory containing the original local dataset subfolders")
-    subparser.add_argument("--output-dir", "--output_dir", help="Artifact root; task/provider subfolders are added")
+    subparser.add_argument("--output-dir", "--output_dir", help="Output root; task/provider subfolders are added. For analyze: existing evaluation results root to read")
     subparser.add_argument("--img-dir", "--img_dir", default="", help="Model image directory, already including task/model")
     subparser.add_argument("--model", default="gpt-image-1.5")
     subparser.add_argument("--judge-provider", choices=["openai", "gemini"], default="openai")
@@ -22,10 +22,15 @@ def add_common_args(subparser):
     subparser.add_argument("--ocr-backend", "--ocr_backend", choices=["PaddleOCR", "DeepSeekOCR"], default="PaddleOCR")
     subparser.add_argument("--ocr-mode", choices=["legacy", "ablation"], default="legacy")
     subparser.add_argument("--deduplicate-steps", action="store_true", help="Opt-in exact step deduplication; legacy default is unchanged")
+    # identical / multilingual: text lengths.
     subparser.add_argument("--text-length", "--text_length", nargs="+", type=int, default=[64, 128, 256, 512])
+    # multilingual: languages.
     subparser.add_argument("--languages", nargs="+", choices=["ar", "en", "fr", "ja", "ko", "zh"], default=["ar", "en", "fr", "ja", "ko", "zh"])
+    # reasoning: generation levels; evaluation reads available images.
     subparser.add_argument("--levels", nargs="+", type=int, choices=range(1, 6), default=[1, 2, 3, 4, 5])
+    # multiple_choice: difficulty splits.
     subparser.add_argument("--mc-difficulty", "--mc_difficulty", nargs="+", choices=["easy", "challenge"], default=["easy", "challenge"])
+    # context_reasoning: no task-specific settings.
 
     limit = subparser.add_mutually_exclusive_group()
     limit.add_argument("--limit", type=int, help="Examples per group; default 1 for API/model workflows")
@@ -34,10 +39,14 @@ def add_common_args(subparser):
 
     subparser.add_argument("--dry-run", action="store_true", help="Print configuration without reading data, loading models or calling APIs")
     subparser.add_argument("--max-judge-calls", type=int, help="Optional total cap on paid extraction/scoring calls")
-    subparser.add_argument("--manifest-dir", default=str(BASE / "artifacts" / "manifests"))
+    subparser.add_argument("--judge-call-delay", type=float, default=1.0, help="Seconds to wait between judge API calls (default: 1; 0 disables)")
+    if subparser.prog.split()[-1] in {"evaluate", "analyze"}:
+        subparser.add_argument("--resume", action="store_true", help="Append results and skip IDs already saved; analysis preprocessing skips saved scores")
+    subparser.add_argument("--manifest-dir", help="Optional directory for run metadata and generation logs; disabled by default")
 
 
 def add_generate_args(subparser):
+    subparser.add_argument("--generation-call-delay", type=float, default=1.0, help="Minimum seconds between generation API calls (default: 1; 0 disables)")
     subparser.add_argument("--num-workers", "--num_workers", type=int, default=1)
     subparser.add_argument("--run-label", help="Output folder label; model sent to provider remains --model")
     subparser.add_argument("--resume", action="store_true", help="Skip existing images (records them separately)")
@@ -97,6 +106,8 @@ def parser():
 
 
 def validate_limits(args, parser):
+    if not 0 <= args.judge_call_delay < float("inf"):
+        parser.error("--judge-call-delay must be finite and nonnegative")
     if args.limit is not None and args.limit < 1:
         parser.error("--limit must be positive")
     if args.max_judge_calls is not None and args.max_judge_calls < 1:
@@ -122,6 +133,8 @@ def resolve_judge_model(args, parser):
 
 
 def validate_generate(args, parser):
+    if not 0 <= args.generation_call_delay < float("inf"):
+        parser.error("--generation-call-delay must be finite and nonnegative")
     if args.model not in MODELS:
         parser.error(f"Unknown image model. Choose from: {', '.join(MODELS)}")
     if args.model in EXACT_TEXT_ONLY and args.dataset_type != "identical":
@@ -172,7 +185,7 @@ def resolve_output_dir(args):
             "clear_area": "render_clear_area",
         }[args.render_metric]
 
-    output = Path(args.output_dir or BASE / "artifacts" / roots[args.command]).resolve()
+    output = Path(args.output_dir or BASE / roots[args.command]).resolve()
     if args.command != "analyze":
         output = output / args.dataset_type
         if args.command == "evaluate":
@@ -210,7 +223,7 @@ def execute(args):
         from .generation.run import run
         return run(args)
     if args.command == "construct":
-        from .datasets import build
+        from .data_loading import build
         if args.dataset_type == "multilingual":
             for lang in args.languages:
                 (Path(args.output_dir) / lang).mkdir(parents=True, exist_ok=True)
@@ -267,5 +280,6 @@ def main(argv=None):
         finish(path, record, status="failed", error=exc)
         raise
 
-    print(f"Run manifest: {path}")
+    if path is not None:
+        print(f"Run manifest: {path}")
     return 1 if status == "completed_with_failures" else 0

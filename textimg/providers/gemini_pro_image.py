@@ -1,10 +1,8 @@
-"""Deferred Gemini 3 Pro image adapter, sharing the benchmark's exact prompts."""
-
-
 def gemini_pro_image_generation(args, prompt, text):
     from google import genai
     from google.genai import types
     from .judge import required_key
+    
     client = genai.Client(api_key=required_key("GOOGLE_API_KEY"))
     response = client.models.generate_content(
         model=args.model,

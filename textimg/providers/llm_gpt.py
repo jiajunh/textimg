@@ -1,5 +1,3 @@
-"""Legacy adapter; imported only when selected."""
-
 import os
 import re
 import base64

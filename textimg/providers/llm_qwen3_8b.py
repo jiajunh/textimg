@@ -1,5 +1,3 @@
-"""Legacy adapter; imported only when selected."""
-
 import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
 model_name = 'Qwen/Qwen3-8B'

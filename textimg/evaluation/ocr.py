@@ -12,6 +12,8 @@ class PaddleOCRBackend(OCRBackend):
     def __init__(self, args):
         from paddleocr import PaddleOCR
         self.ocr = PaddleOCR(
+            # Avoid the Paddle 3.3.x oneDNN/PIR attribute conversion failure.
+            enable_mkldnn=False,
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,

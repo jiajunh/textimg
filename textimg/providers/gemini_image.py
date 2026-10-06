@@ -1,5 +1,3 @@
-"""Legacy adapter; imported only when selected."""
-
 import os
 from google import genai
 from google.genai import types

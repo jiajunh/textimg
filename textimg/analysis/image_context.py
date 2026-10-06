@@ -2,7 +2,7 @@ import os
 import json
 from tqdm import tqdm
 import numpy as np
-from textimg.core.io import load_json
+from textimg.core.io import load_json, completed_ids, open_results
 from textimg.judging.reasoning import math_answer_score, qa_answer_score
 
 def analyse_context_reasoning_preprocessing(args):
@@ -13,9 +13,12 @@ def analyse_context_reasoning_preprocessing(args):
         data = data[:args.limit]
     print(data[0])
     output_path = os.path.join(args.output_dir, 'context_reasoning', args.judge_model, f'{args.model}_preprocess.jsonl')
-    with open(output_path, 'w', encoding='utf-8') as f:
+    done = completed_ids(output_path, args)
+    with open_results(output_path, args) as f:
         for data_row in tqdm(data, desc=f'{args.model}'):
             data_id = data_row['id']
+            if data_id in done:
+                continue
             passage = data_row['passage']
             question = data_row['question']
             gt_answer = data_row['gt_answer']

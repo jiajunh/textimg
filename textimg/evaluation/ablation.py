@@ -1,8 +1,8 @@
 import os
 import json
 from tqdm import tqdm
-from textimg.datasets.load import load_data
-from textimg.core.io import image_files
+from textimg.data_loading.load import load_data
+from textimg.core.io import image_files, completed_ids, open_results
 from textimg.core.text import *
 from textimg.judging.reasoning import gpt_extract_text, math_process_score, context_reasoning_score, multiple_choice_reasoning_score
 from .deepseek_text import extract_deepseek_ocr_result
@@ -12,12 +12,15 @@ def evaluate_identical(args):
     output_path = os.path.join(args.output_dir, f'{args.model}.jsonl')
     print(output_path)
     id_to_idx = {id_: i for i, id_ in enumerate(ds['id'])}
-    with open(output_path, 'w', encoding='utf-8') as f:
+    done = completed_ids(output_path, args)
+    with open_results(output_path, args) as f:
         for k in args.text_length:
             img_dir = os.path.join(args.img_dir, str(k))
             img_files = image_files(img_dir, args)
             for img_file in tqdm(img_files, desc=f'text_length={k}'):
                 img_id = int(img_file.split('.')[0])
+                if img_id in done:
+                    continue
                 if img_id not in id_to_idx:
                     continue
                 data_row = ds[id_to_idx[img_id]]
