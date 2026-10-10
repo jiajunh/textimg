@@ -19,7 +19,14 @@ def qwen_image_21_generation(args, prompt, text):
     import torch
     kwargs = {"prompt": f"{prompt}\n\n{text}", "width": args.width,
               "height": args.height, "num_inference_steps": args.inference_steps,
+              "num_images_per_prompt": 1,
               "true_cfg_scale": 1.0}
     if args.generation_seed is not None:
         kwargs["generator"] = torch.Generator(device=args.device).manual_seed(args.generation_seed)
-    return args.qwen_image_21_pipe(**kwargs).images[0]
+    try:
+        with torch.inference_mode():
+            return args.qwen_image_21_pipe(**kwargs).images[0]
+    finally:
+        if args.device == "cuda" and torch.cuda.is_available():
+            # Release unused cached blocks; model weights remain loaded.
+            torch.cuda.empty_cache()
