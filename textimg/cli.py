@@ -19,6 +19,9 @@ def add_common_args(subparser):
     subparser.add_argument("--model", default="gpt-image-1.5")
     subparser.add_argument("--judge-provider", choices=["openai", "gemini"], default="openai")
     subparser.add_argument("--judge-model", "--judge_model", default=None)
+    subparser.add_argument("--gemini-backend", choices=["auto", "vertex", "developer"], default="auto",
+                           help="Auto selects Vertex when Google credentials/project are set; otherwise API key")
+    subparser.add_argument("--gemini-location", default=None, help="Vertex location; defaults to GOOGLE_CLOUD_LOCATION or global")
     subparser.add_argument("--ocr-backend", "--ocr_backend", choices=["PaddleOCR", "DeepSeekOCR"], default="PaddleOCR")
     subparser.add_argument("--ocr-mode", choices=["legacy", "ablation"], default="legacy")
     subparser.add_argument("--deduplicate-steps", action="store_true", help="Opt-in exact step deduplication; legacy default is unchanged")

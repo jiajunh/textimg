@@ -81,9 +81,10 @@ def evaluate_reasoning(args):
             gt_answer = extract_math_solution(solution_text)
             cur_img_path = os.path.join(img_dir, img_file)
             vlm_text = gpt_extract_text(args, cur_img_path)
+            vlm_text_raw = vlm_text
             vlm_text = normalize_vlm_text(vlm_text)
             process_scores = math_process_score(args, problem, vlm_text)
-            result = {'id': data_row['id'], 'problem': problem, 'vlm_solution': vlm_text, 'gt_answer': gt_answer, 'process_scrores': process_scores}
+            result = {'id': data_row['id'], 'problem': problem, 'vlm_solution': vlm_text, 'vlm_solution_raw': vlm_text_raw, 'gt_answer': gt_answer, 'process_scrores': process_scores}
             f.write(json.dumps(result, ensure_ascii=False) + '\n')
 
 def evaluate_context_reasoning(args):
@@ -106,9 +107,10 @@ def evaluate_context_reasoning(args):
             gt_answer = answers_spans['spans']
             cur_img_path = os.path.join(img_dir, img_file)
             vlm_text = gpt_extract_text(args, cur_img_path)
+            vlm_text_raw = vlm_text
             vlm_text = normalize_vlm_text(vlm_text)
             reasoning_scores = context_reasoning_score(args, passage, question, vlm_text)
-            result = {'id': data_row['id'], 'passage': passage, 'question': question, 'vlm_solution': vlm_text, 'gt_answer': gt_answer, 'reasoning_scores': reasoning_scores}
+            result = {'id': data_row['id'], 'passage': passage, 'question': question, 'vlm_solution': vlm_text, 'vlm_solution_raw': vlm_text_raw, 'gt_answer': gt_answer, 'reasoning_scores': reasoning_scores}
             f.write(json.dumps(result, ensure_ascii=False) + '\n')
 
 def evaluate_multiple_choice(args):
@@ -137,7 +139,8 @@ def evaluate_multiple_choice(args):
                 text = f'{question}\n\nChoices:\n{c_texts}'
                 cur_img_path = os.path.join(img_dir, img_file)
                 vlm_text = gpt_extract_text(args, cur_img_path)
+                vlm_text_raw = vlm_text
                 vlm_text = normalize_vlm_text(vlm_text)
                 reasoning_scores, reasoning_count = multiple_choice_reasoning_score(args, text, vlm_text)
-                result = {'id': data_row['id'], 'question': question, 'vlm_solution': vlm_text, 'gt_answer': gt_answer, 'reasoning_scores': reasoning_scores, 'reasoning_count': reasoning_count}
+                result = {'id': data_row['id'], 'question': question, 'vlm_solution': vlm_text, 'vlm_solution_raw': vlm_text_raw, 'gt_answer': gt_answer, 'reasoning_scores': reasoning_scores, 'reasoning_count': reasoning_count}
                 f.write(json.dumps(result, ensure_ascii=False) + '\n')

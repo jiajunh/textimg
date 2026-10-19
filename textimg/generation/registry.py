@@ -37,7 +37,7 @@ def generation_settings(args):
         return {"aspect_ratio": "1:1", "image_size": "1K", "response_modalities": ["TEXT", "IMAGE"]}
     if args.model == "gemini-2.5-flash-image":
         return {"aspect_ratio": "1:1", "image_size": "provider default",
-                "response_modalities": ["Image"], "hate_speech_threshold": "BLOCK_LOW_AND_ABOVE"}
+                "response_modalities": ["IMAGE"], "hate_speech_threshold": "BLOCK_LOW_AND_ABOVE"}
     if args.model == "qwen-image-2.1":
         return {"checkpoint": args.model_path or "Qwen/Qwen-Image-2.1", "revision": args.revision,
                 "width": args.width, "height": args.height, "num_inference_steps": args.inference_steps,
@@ -57,7 +57,10 @@ def generation_settings(args):
 
 def get_generator_fn(args):
     module, function, key = MODELS[args.model]
-    if key:
+    if args.model.startswith("gemini-"):
+        from textimg.providers.gemini_client import connection_settings
+        connection_settings(args)
+    elif key:
         from textimg.providers.judge import required_key
         required_key(key)
     adapter = import_module(f"textimg.providers.{module}")

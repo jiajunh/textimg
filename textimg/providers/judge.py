@@ -13,9 +13,8 @@ def required_key(name):
 
 class GeminiResponses:
     """Small bridge for the subset of Responses calls used by legacy judges."""
-    def __init__(self):
-        from google import genai
-        self.client = genai.Client(api_key=required_key("GOOGLE_API_KEY"))
+    def __init__(self, args=None):
+        self.args = args
         self.responses = self
 
     def create(self, *, model, input, reasoning=None):
@@ -37,8 +36,10 @@ class GeminiResponses:
                         raise ValueError(f"Unsupported input part: {part['type']}")
         # OpenAI's reasoning effort is not translated into a different model's
         # budget. Gemini uses its model default; this is recorded in the manifest.
-        response = self.client.models.generate_content(model=model, contents=contents)
-        if response.text is None:
+        from .gemini_client import gemini_client
+        with gemini_client(self.args) as client:
+            response = client.models.generate_content(model=model, contents=contents)
+        if not response.text or not response.text.strip():
             raise RuntimeError("Gemini judge returned no text; inspect the provider response.")
         return SimpleNamespace(output_text=response.text)
 
@@ -74,7 +75,7 @@ class CountedResponses:
 
 def judge_client(args):
     if args.judge_provider == "gemini":
-        client = GeminiResponses()
+        client = GeminiResponses(args)
     else:
         from openai import OpenAI
         client = OpenAI(api_key=required_key("OPENAI_API_KEY"))

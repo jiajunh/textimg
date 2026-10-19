@@ -2,10 +2,13 @@ import os
 import json
 from tqdm import tqdm
 import numpy as np
+from collections import Counter
+from textimg.core.answers import multiple_choice_answer_score
 from textimg.core.io import load_json
 from textimg.judging.reasoning import math_answer_score, qa_answer_score
 
 def analyse_multiple_choice(args):
+    answer_statuses = Counter()
     all_ans_scores = []
     all_process_scores = []
     ans_scores = {'easy': [], 'challenge': []}
@@ -18,24 +21,13 @@ def analyse_multiple_choice(args):
             data_id = data_row['id']
             gt_answer = data_row['gt_answer']
             process_scrores = data_row['reasoning_scores']
-            vlm_answer = data_row['vlm_solution']
-            vlm_answer_split = vlm_answer.split('swer:')[-1]
-            if gt_answer == '1':
-                gt_answer = 'A'
-            elif gt_answer == '2':
-                gt_answer = 'B'
-            elif gt_answer == '3':
-                gt_answer = 'C'
-            elif gt_answer == '4':
-                gt_answer = 'D'
-            if vlm_answer_split and gt_answer in vlm_answer_split:
-                all_ans_scores.append(1)
-                ans_scores[split].append(1)
-            else:
-                all_ans_scores.append(0)
-                ans_scores[split].append(0)
+            score, status = multiple_choice_answer_score(data_row)
+            answer_statuses[status] += 1
+            all_ans_scores.append(score)
+            ans_scores[split].append(score)
             process_scores[split].append(np.mean(process_scrores))
             all_process_scores.append(np.mean(process_scrores))
+    print('Answer validation:', dict(answer_statuses))
     for split in args.mc_difficulty:
         print(f'Split: {split}, ans_scores: {np.mean(ans_scores[split])}, process_scores: {np.mean(process_scores[split])}')
     print(f'Overall - ans_scores: {np.mean(all_ans_scores)}, process_scores: {np.mean(all_process_scores)}')

@@ -38,6 +38,9 @@ def start(args):
     if args.command == "generate":
         from textimg.generation.registry import generation_settings
         record["generation_settings"] = generation_settings(args)
+    if (args.command == "generate" and args.model.startswith("gemini-")) or args.judge_provider == "gemini":
+        from textimg.providers.gemini_client import connection_settings
+        record["gemini_connection"] = connection_settings(args)
     path.write_text(json.dumps(record, indent=2) + "\n")
     return path, record
 

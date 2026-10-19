@@ -23,6 +23,12 @@ htmlcov/
 .env.*
 !.env.example
 .aws/
+.drive_auth/
+**/client_secret*.json
+**/token.json
+**/joe_gemini_api/*.json
+**/joe_gemini_api/outputs/
+**/joe_gemini_api/output_folder/
 
 # Generated experiment outputs and downloaded model caches
 /artifacts/

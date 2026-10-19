@@ -151,6 +151,9 @@ def multiple_choice_reasoning_score(args, question, solution):
     return (process_scores, reasoning_count)
 
 def math_answer_score(args, gt_answer, vlm_answer):
+    from textimg.core.answers import validate_answer
+    if validate_answer(vlm_answer) != 'valid':
+        return 0
     client = judge_client(args)
     prompt = (
         'You are judging whether the candidate answer is equivalent to the ground truth answer.\n'
@@ -170,6 +173,9 @@ def math_answer_score(args, gt_answer, vlm_answer):
     return ans_score
 
 def qa_answer_score(args, gt_answer, vlm_answer, passage=None, question=None):
+    from textimg.core.answers import validate_answer
+    if validate_answer(vlm_answer) != 'valid':
+        return 0
     client = judge_client(args)
     prompt = (
         'You are judging whether the candidate answer has the same meaning to the ground truth answer given '

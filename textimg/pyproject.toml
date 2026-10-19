@@ -37,6 +37,7 @@ dependencies = [
     "fsspec==2026.7.0",
     "future==1.0.0",
     "google==3.0.0",
+    "google-genai>=2.29.0,<3",
     "h11==0.16.0",
     "hf-xet==1.6.0",
     "httpcore==1.0.9",
